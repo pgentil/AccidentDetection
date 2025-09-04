@@ -1,4 +1,5 @@
-fastapi
-uvicorn
-opencv-python-headless
-inference-sdk
+fastapi==0.115.14
+uvicorn==0.35.0
+opencv-python-headless==4.12.0.88
+inference==0.51.10
+python-multipart==0.0.20
