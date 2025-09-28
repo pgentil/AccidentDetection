@@ -503,6 +503,33 @@
         </div>
     </section>
 
+    <!-- Live Cameras Section -->
+    <section class="upload-section" id="cameras">
+        <div class="container">
+            <div class="section-header">
+                <h2>Live Cameras</h2>
+                <p>Add a new camera by ID and source (e.g., <code>0</code> for local webcam, or RTSP/HTTP URL for IP cameras).</p>
+            </div>
+            
+            <div class="upload-container">
+                <div style="margin: 1.5rem 0;">
+                    <input type="text" id="camIdInput" placeholder="Camera ID (e.g. cam1)" 
+                           style="padding: 1rem; border-radius: 8px; border: 2px solid #00d4ff; width: 250px; font-size: 1.1rem; margin-right:1rem;">
+                    <input type="text" id="camSourceInput" placeholder="Source (e.g. 0 or rtsp://...)" 
+                           style="padding: 1rem; border-radius: 8px; border: 2px solid #00d4ff; width: 400px; font-size: 1.1rem;">
+                </div>
+                <div class="upload-buttons">
+                    <button class="upload-btn" id="addCamBtn">
+                        Add Camera
+                    </button>
+                </div>
+                
+                <div id="camerasContainer" class="features-grid"></div>
+            </div>
+        </div>
+    </section>
+
+
     <!-- Team Section -->
     <section class="team" id="team">
         <div class="container">
@@ -670,6 +697,8 @@
                 uploadBtn.disabled = false;
             }
         }
+
+        
         
 
 
@@ -700,6 +729,96 @@
                 alert('LinkedIn profile not found. Please update the profile URL.');
             }
         }
+
+                // Add Camera functionality
+        const addCamBtn = document.getElementById('addCamBtn');
+        const camIdInput = document.getElementById('camIdInput');
+        const camSourceInput = document.getElementById('camSourceInput');
+        const camerasContainer = document.getElementById('camerasContainer');
+
+        addCamBtn.addEventListener('click', async () => {
+            const camId = camIdInput.value.trim();
+            const source = camSourceInput.value.trim();
+
+            if (!camId || !source) {
+                alert("Please enter both Camera ID and Source.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("cam_id", camId);
+            formData.append("source", source);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/add_camera/`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                alert(result.message || "Camera added.");
+
+                // === Añadir la cámara dentro del contenedor principal, sin reemplazar ===
+                const camDiv = document.createElement("div");
+                camDiv.style.marginBottom = "2rem";
+                camDiv.style.padding = "1rem";
+                camDiv.style.border = "2px solid #00d4ff";
+                camDiv.style.borderRadius = "12px";
+
+                camDiv.id = `camera-${camId}`;
+                camDiv.innerHTML = `
+                    <h3 style="margin-bottom:1rem; color:#00d4ff; font-family:'JetBrains Mono', monospace;">
+                        Camera: ${camId}
+                    </h3>
+                    <img src="${API_BASE_URL}/camera/${camId}/feed" 
+                        alt="Camera ${camId} Feed"
+                        style="width:100%; border-radius: 12px; margin-bottom:1rem;"
+                        onerror="alert('Failed to load camera feed. Please check the source.')">
+                    <br>
+                    <button class="upload-btn" onclick="removeCamera('${camId}')">Remove Camera</button>
+                `;
+
+                videoContainer.appendChild(camDiv);
+
+
+                // Limpiar inputs
+                camIdInput.value = "";
+                camSourceInput.value = "";
+            } catch (err) {
+                alert(`Failed to add camera: ${err.message}`);
+            }
+        });
+
+                // Remove camera function
+        async function removeCamera(camId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/remove_camera/${camId}`, {
+                    method: "DELETE"
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                alert(result.message || `Camera ${camId} removed.`);
+
+                // Eliminar el bloque del frontend
+                const camDiv = document.getElementById(`camera-${camId}`);
+                if (camDiv) {
+                    camDiv.remove();
+                }
+            } catch (err) {
+                alert(`Failed to remove camera: ${err.message}`);
+            }
+        }
+
+
+
     </script>
 </body>
 </html> 
