@@ -19,10 +19,10 @@ pip install -r backend/requirements.txt
 
 ## 3) Run the backend
 
-
+```bash
 cd backend
 uvicorn main:app --reload --host 127.0.0.1 --port 8000
-
+```
 
 Backend will be available at `http://127.0.0.1:8000`.
 
@@ -46,3 +46,4 @@ python -m http.server 8080
 - Ensure the backend is running before opening the frontend.
 - If you use an external AI service (e.g., Roboflow), configure the API key as required by `backend/main.py`.
 - Supported video formats typically include MP4, AVI, and MOV.
+
