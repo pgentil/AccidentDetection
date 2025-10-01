@@ -481,6 +481,9 @@
                 </div>
                 
                 <input type="file" id="videoFile" class="file-input" accept="video/*" style="display: none;">
+                <div style="margin: 1.5rem 0;">
+                    <input type="email" id="emailInput" class="file-input" placeholder="Enter your email address" style="padding: 1rem; border-radius: 8px; border: 2px solid #00d4ff; width: 300px; font-size: 1.1rem;">
+                </div>
                 <div class="upload-buttons">
                     <button class="upload-btn" onclick="document.getElementById('videoFile').click()">
                         Choose Video File
@@ -629,8 +632,15 @@
                 return;
             }
 
+            const email = document.getElementById('emailInput').value.trim();
+            if (!email) {
+                alert('Please enter your email address.');
+                return;
+            }
+
             const formData = new FormData();
             formData.append('file', currentVideoFile);
+            formData.append('email', email);
 
             try {
                 uploadBtn.textContent = 'Uploading...';
@@ -660,6 +670,8 @@
                 uploadBtn.disabled = false;
             }
         }
+        
+
 
         // Start video feed
         function startVideoFeed() {

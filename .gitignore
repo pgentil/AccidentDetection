@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+*.pyc
+sendgrid.env
+temp_video.mp4

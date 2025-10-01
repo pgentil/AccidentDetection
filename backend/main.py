@@ -1,16 +1,18 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from inference.models.utils import get_roboflow_model
 import cv2
 import tempfile
 import os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 # === CONFIGURATION ===
 model_name = "amazon-accident-detection-o3juo"
 model_version = "3"
 api_key = "ktSFVMakkE69oahKbqtv"
-
+sendgrid_api = os.getenv("SENDGRID_API_KEY")  # Load from environment variable for security
 # Load Roboflow model
 model = get_roboflow_model(
     model_id=f"{model_name}/{model_version}",
@@ -30,17 +32,39 @@ app.add_middleware(
 
 # Global variable to store last uploaded video path
 LAST_UPLOADED_VIDEO = None
+LAST_EMAIL = None
 
-def process_video(video_path: str):
+def process_video(video_path: str, email: str = None):
     cap = cv2.VideoCapture(video_path)
+    accident_flag = False  # Flag to track if an accident has been detected
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
         # Inference
-        results = model.infer(image=frame, confidence=0.5, iou_threshold=0.5)
+        results = model.infer(image=frame, confidence=0.7, iou_threshold=0.5)
         for prediction in results[0].predictions:
+            if prediction.class_name == "accident" and not accident_flag and email is not None:
+                accident_flag = True
+                # Send email notification
+                message = Mail(
+                from_email='pgentil@ucm.es',
+                to_emails=email,
+                subject='Accident Detected',
+                html_content='An accident has been detected in the uploaded video. Please check the live feed.')
+                try:
+                    sg = SendGridAPIClient(sendgrid_api)
+                    # sg.set_sendgrid_data_residency("eu")
+                    # uncomment the above line if you are sending mail using a regional EU subuser
+                    response = sg.send(message)
+                    print(response.status_code)
+                    print(response.body)
+                    print(response.headers)
+                    LAST_EMAIL = None  # Reset after sending
+                except Exception as e:
+                    print(str(e))
+
             x_center = int(prediction.x)
             y_center = int(prediction.y)
             w = int(prediction.width)
@@ -63,15 +87,19 @@ def process_video(video_path: str):
 
 # ---------------- Upload video and prepare live feed ----------------
 @app.post("/upload_video/")
-async def upload_video(file: UploadFile = File(...)):
-    global LAST_UPLOADED_VIDEO
+async def upload_video(file: UploadFile = File(...), email: str = Form(...)):
+    global LAST_UPLOADED_VIDEO, LAST_EMAIL
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
     temp_file.write(await file.read())
     temp_file.close()
 
     LAST_UPLOADED_VIDEO = temp_file.name  # store for live feed
-
-    return {"message": f"Video uploaded successfully. Access live feed at /video_feed/"}
+    LAST_EMAIL = email  # store email for notifications
+    # For now, just print/log the email address (extend as needed)
+    print(f"Received email: {email}")
+    
+    
+    return {"message": f"Video uploaded successfully. Access live feed at /video_feed/", "email": email}
 
 # ---------------- Live feed in browser ----------------
 @app.get("/video_feed/")
@@ -80,7 +108,7 @@ def video_feed():
         return {"error": "No video uploaded yet."}
 
     return StreamingResponse(
-        process_video(LAST_UPLOADED_VIDEO),
+        process_video(LAST_UPLOADED_VIDEO, LAST_EMAIL),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
 
