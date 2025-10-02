@@ -14,7 +14,7 @@ import shutil
 model_name = "amazon-accident-detection-o3juo"
 model_version = "3"
 api_key = "ktSFVMakkE69oahKbqtv"
-sendgrid_api = None #os.getenv("SENDGRID_api_key")  # Load from environment variable for security
+sendgrid_api = "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" #os.getenv("SENDGRID_api_key")  # Load from environment variable for security
 # Load Roboflow model
 model = get_roboflow_model(
     model_id=f"{model_name}/{model_version}",
