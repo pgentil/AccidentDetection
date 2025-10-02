@@ -8,18 +8,18 @@ import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import time
+import shutil
 
 # === CONFIGURATION ===
 model_name = "amazon-accident-detection-o3juo"
 model_version = "3"
 api_key = "ktSFVMakkE69oahKbqtv"
-sendgrid_api = "" #os.getenv("SENDGRID_api_key")  # Load from environment variable for security
+sendgrid_api = "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" #os.getenv("SENDGRID_api_key")  # Load from environment variable for security
 # Load Roboflow model
 model = get_roboflow_model(
     model_id=f"{model_name}/{model_version}",
     api_key=api_key
 )
-TEMP_VID = "./temp_video.mp4"
 TARGET_FPS = 5  # Desired FPS for processing
 
 app = FastAPI()
@@ -37,9 +37,9 @@ app.add_middleware(
 LAST_UPLOADED_VIDEO = None
 LAST_EMAIL = None
 
-def reduce_fps(video_path: str, target_fps: int = 5, cut_video: bool = False, video_len : int = 10):
+def reduce_fps(video_path: str, output_path: str, target_fps: int = 5, cut_video: bool = False, video_len : int = 10):
     """Reduce the FPS of the input video to target_fps. Optionally cut the video to a certain length in seconds. 
-    Returns the list of frames extracted if needed. Saves the reduced FPS video to TEMP_VID. 
+    Returns the list of frames extracted if needed. Saves the reduced FPS video to output_path. 
     Motivation: reduce latency in inference and processing time."""
     #capturamos el original
     frames = []
@@ -48,13 +48,16 @@ def reduce_fps(video_path: str, target_fps: int = 5, cut_video: bool = False, vi
     original_fps = cap.get(cv2.CAP_PROP_FPS)
     if target_fps >= original_fps:
         print("Target FPS is greater than or equal to original FPS. No reduction applied.")
+        # Just copy the original file to output path
+        
+        shutil.copy2(video_path, output_path)
         
     else:
         print(f"Original FPS: {original_fps}")
         #caluclamos el intervalo de frames para reducir a target_fps
         frame_interval = int(original_fps / target_fps) if original_fps > target_fps else 1
         #preparamos el video de salida codec mp4v
-        out = cv2.VideoWriter(TEMP_VID, cv2.VideoWriter_fourcc(*"mp4v"), target_fps, (int(cap.get(3)), int(cap.get(4))))
+        out = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*"mp4v"), target_fps, (int(cap.get(3)), int(cap.get(4))))
         if (cut_video):
             max_frames = target_fps * video_len
         
@@ -118,29 +121,40 @@ def draw_bounding_box(frame, prediction):
 
 def process_video(video_path: str, email: str = None):
     """Process the video frame by frame, perform inference, and yield frames with bounding boxes."""
-    reduce_fps(video_path, target_fps=TARGET_FPS, cut_video=False)
-    start = time.time()
-    cap = cv2.VideoCapture(TEMP_VID)
-    accident_flag = False  # Flag to track if an accident has been detected
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        # Inference
-        results = model.infer(image=frame, confidence=0.7, iou_threshold=0.5)
-        for prediction in results[0].predictions:
-            if prediction.class_name == "accident" and not accident_flag and email is not None:
-                accident_flag = True
-                send_email_notification(email)
-            draw_bounding_box(frame, prediction)
-        _, buffer = cv2.imencode(".jpg", frame)
-        frame_bytes = buffer.tobytes()
-        yield (b"--frame\r\n"
-               b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n")
-    end = time.time()
-    accident_flag = False  # Reset flag for next video
-    print(f"Processing time: {end - start} seconds")
-    cap.release()
+    # Create unique temp file for this video processing
+    temp_processed_path = video_path.replace('.mp4', '_processed.mp4')
+    
+    try:
+        reduce_fps(video_path, temp_processed_path, target_fps=TARGET_FPS, cut_video=False)
+        start = time.time()
+        cap = cv2.VideoCapture(temp_processed_path)
+        accident_flag = False  # Flag to track if an accident has been detected
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            # Inference
+            results = model.infer(image=frame, confidence=0.7, iou_threshold=0.5)
+            for prediction in results[0].predictions:
+                if prediction.class_name == "accident" and not accident_flag and email is not None:
+                    accident_flag = True
+                    send_email_notification(email)
+                draw_bounding_box(frame, prediction)
+            _, buffer = cv2.imencode(".jpg", frame)
+            frame_bytes = buffer.tobytes()
+            yield (b"--frame\r\n"
+                   b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n")
+        end = time.time()
+        accident_flag = False  # Reset flag for next video
+        print(f"Processing time: {end - start} seconds")
+        cap.release()
+    finally:
+        # Clean up temp processed file
+        if os.path.exists(temp_processed_path):
+            try:
+                os.remove(temp_processed_path)
+            except:
+                pass
 
 # ---------------- Upload video and prepare live feed ----------------
 @app.post("/upload_video/")
@@ -161,13 +175,26 @@ async def upload_video(file: UploadFile = File(...), email: str = Form(...)):
 
 # ---------------- Live feed in browser ----------------
 @app.get("/video_feed/")
-def video_feed():
+def video_feed(t: str = None):  # Accept timestamp parameter to prevent caching
+    print(f"Accessing video feed... LAST_UPLOADED_VIDEO: {LAST_UPLOADED_VIDEO}")
     if not LAST_UPLOADED_VIDEO or not os.path.exists(LAST_UPLOADED_VIDEO):
+        print("Error: No video uploaded or file doesn't exist")
         return {"error": "No video uploaded yet."}
 
+    print(f"Starting video processing for: {LAST_UPLOADED_VIDEO}")
+    
+    # Add headers to prevent caching and ensure fresh connections
+    headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "Connection": "close"
+    }
+    
     return StreamingResponse(
         process_video(LAST_UPLOADED_VIDEO, LAST_EMAIL),
-        media_type="multipart/x-mixed-replace; boundary=frame"
+        media_type="multipart/x-mixed-replace; boundary=frame",
+        headers=headers
     )
 
 # ---------------- HTML page to display live feed ----------------
