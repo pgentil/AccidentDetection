@@ -6,13 +6,14 @@ import cv2
 import tempfile
 import os
 import threading
+import subprocess
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 # === CONFIGURATION ===
 model_name = "amazon-accident-detection-o3juo"
 model_version = "3"
-api_key = "ktSFVMakkE69oahKbqtv"  # ⚠️ Mejor cargar desde env var
+api_key = "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"  
 sendgrid_api = os.getenv("SENDGRID_API_KEY")  # Load from environment variable for security
 
 # Load Roboflow model
@@ -33,7 +34,7 @@ app.add_middleware(
 )
 
 # ===========================
-# Video Upload (lo que ya tenías)
+# Video Upload (lo que ya teníamos antes)
 # ===========================
 LAST_UPLOADED_VIDEO = None
 LAST_EMAIL = None
@@ -114,38 +115,53 @@ def video_feed():
 # ===========================
 # NUEVO: Live Cameras
 # ===========================
-
+import subprocess
 
 class Camera:
-    def __init__(self, cam_id: str, source: str):
-        self.cam_id = cam_id
-        self.source = source
-        self.cap = cv2.VideoCapture(source)
+    def __init__(self, source: str):
+        self.source = self.get_stream_url(source)
+        self.cap = None
         self.running = False
         self.thread = None
         self.last_frame = None
 
+    def get_stream_url(self, source: str):
+        # If it's a YouTube link, extract real stream using yt-dlp
+        if "youtube.com" in source or "youtu.be" in source:
+            try:
+                result = subprocess.run(
+                    ["yt-dlp", "-f", "best", "-g", source],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    check=True
+                )
+                return result.stdout.strip()
+            except Exception as e:
+                raise ValueError(f"Failed to extract YouTube stream: {e}")
+        return source
+
     def start(self):
-        if not self.running:
-            self.running = True
-            self.thread = threading.Thread(target=self.update, daemon=True)
-            self.thread.start()
+        self.cap = cv2.VideoCapture(self.source)
+        if not self.cap.isOpened():
+            raise ValueError(f"Cannot open camera source: {self.source}")
+        self.running = True
+        self.thread = threading.Thread(target=self.update, daemon=True)
+        self.thread.start()
 
     def update(self):
-        while self.running:
+        while self.running and self.cap.isOpened():
             ret, frame = self.cap.read()
             if not ret:
                 continue
-            # Inference
+            # Run inference
             results = model.infer(image=frame, confidence=0.7, iou_threshold=0.5)
-            for prediction in results[0].predictions:
-                x_center = int(prediction.x)
-                y_center = int(prediction.y)
-                w = int(prediction.width)
-                h = int(prediction.height)
+            for pred in results[0].predictions:
+                x_center, y_center = int(pred.x), int(pred.y)
+                w, h = int(pred.width), int(pred.height)
                 x0, y0 = x_center - w // 2, y_center - h // 2
                 x1, y1 = x_center + w // 2, y_center + h // 2
-                label = prediction.class_name
+                label = pred.class_name
                 cv2.rectangle(frame, (x0, y0), (x1, y1), (0, 0, 255), 3)
                 cv2.putText(frame, label, (x0, y0 - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
@@ -156,34 +172,39 @@ class Camera:
 
     def stop(self):
         self.running = False
-        if self.cap.isOpened():
+        if self.cap and self.cap.isOpened():
             self.cap.release()
 
 
-cameras = {}
+camera: Camera | None = None
 
 
-@app.post("/add_camera/")
-def add_camera(cam_id: str = Form(...), source: str = Form(...)):
-    if cam_id in cameras:
-        return {"error": "Camera already exists"}
-    cameras[cam_id] = Camera(cam_id, source)
-    cameras[cam_id].start()
-    return {"message": f"Camera {cam_id} added."}
+@app.post("/start_camera/")
+def start_camera(source: str = Form(...)):
+    global camera
+    if camera:
+        camera.stop()
+    try:
+        camera = Camera(source)
+        camera.start()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"message": f"Camera started from source {source}"}
 
 
-@app.delete("/remove_camera/{cam_id}")
-def remove_camera(cam_id: str):
-    if cam_id not in cameras:
-        raise HTTPException(status_code=404, detail=f"Camera {cam_id} not found")
-
-    camera = cameras.pop(cam_id)
+@app.get("/stop_camera/")
+def stop_camera():
+    global camera
+    if not camera:
+        return {"error": "No camera running"}
     camera.stop()
-    return {"message": f"Camera {cam_id} removed successfully"}
+    camera = None
+    return {"message": "Camera stopped"}
 
 
-def generate_frames(camera: Camera):
-    while True:
+def generate_frames():
+    global camera
+    while camera and camera.running:
         frame = camera.get_frame()
         if frame is None:
             continue
@@ -192,12 +213,13 @@ def generate_frames(camera: Camera):
                b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n")
 
 
-@app.get("/camera/{cam_id}/feed")
-def camera_feed(cam_id: str):
-    if cam_id not in cameras:
-        return {"error": "Camera not found"}
-    return StreamingResponse(generate_frames(cameras[cam_id]),
+@app.get("/camera_feed/")
+def camera_feed():
+    if not camera or not camera.running:
+        return {"error": "Camera not running"}
+    return StreamingResponse(generate_frames(),
                              media_type="multipart/x-mixed-replace; boundary=frame")
+
 
 # ---------------- HTML page ----------------
 @app.get("/", response_class=HTMLResponse)
@@ -210,6 +232,5 @@ def home():
             <p>Upload a video via /upload_video/ or add cameras via /add_camera/</p>
             <p>Then access: /video_feed/ or /camera/{id}/feed</p>
         </body>
-    </html>
-    """
+    </html>"""
     return html_content

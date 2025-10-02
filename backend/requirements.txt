@@ -4,3 +4,4 @@ opencv-python-headless==4.12.0.88
 inference==0.56.0
 python-multipart==0.0.20
 sendgrid==6.12.4
+yt-dlp==2024.10.07

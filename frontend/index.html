@@ -503,31 +503,76 @@
         </div>
     </section>
 
-    <!-- Live Cameras Section -->
-    <section class="upload-section" id="cameras">
-        <div class="container">
-            <div class="section-header">
-                <h2>Live Cameras</h2>
-                <p>Add a new camera by ID and source (e.g., <code>0</code> for local webcam, or RTSP/HTTP URL for IP cameras).</p>
+    <!-- Live Camera Section -->
+<section class="upload-section" id="cameras">
+    <div class="container">
+        <div class="section-header">
+            <h2>Live Camera</h2>
+            <p>Enter a source (e.g., <code>0</code> for local webcam, or RTSP/HTTP link for IP cameras).</p>
+        </div>
+        
+        <div class="upload-container">
+            <div style="margin: 1.5rem 0;">
+                <input type="text" id="camSourceInput" placeholder="Source (e.g. 0 or rtsp://...)" 
+                       style="padding: 1rem; border-radius: 8px; border: 2px solid #00d4ff; width: 400px; font-size: 1.1rem;">
+            </div>
+            <div class="upload-buttons">
+                <button class="upload-btn" id="startCamBtn">
+                    Start Camera
+                </button>
+                <button class="upload-btn" id="stopCamBtn" style="background:#ff4444; color:white;">
+                    Stop Camera
+                </button>
             </div>
             
-            <div class="upload-container">
-                <div style="margin: 1.5rem 0;">
-                    <input type="text" id="camIdInput" placeholder="Camera ID (e.g. cam1)" 
-                           style="padding: 1rem; border-radius: 8px; border: 2px solid #00d4ff; width: 250px; font-size: 1.1rem; margin-right:1rem;">
-                    <input type="text" id="camSourceInput" placeholder="Source (e.g. 0 or rtsp://...)" 
-                           style="padding: 1rem; border-radius: 8px; border: 2px solid #00d4ff; width: 400px; font-size: 1.1rem;">
-                </div>
-                <div class="upload-buttons">
-                    <button class="upload-btn" id="addCamBtn">
-                        Add Camera
-                    </button>
-                </div>
-                
-                <div id="camerasContainer" class="features-grid"></div>
+            <div id="cameraFeed" class="video-container" style="margin-top:2rem;">
+                <p style="color:#ccc;">Camera not started yet</p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
+
+<script>
+    const startCamBtn = document.getElementById("startCamBtn");
+const stopCamBtn = document.getElementById("stopCamBtn");
+const camSourceInput = document.getElementById("camSourceInput");
+const cameraFeed = document.getElementById("cameraFeed");
+
+startCamBtn.addEventListener("click", async () => {
+    const source = camSourceInput.value.trim();
+    if (!source) {
+        alert("Please enter a camera source (0, RTSP, or YouTube link).");
+        return;
+    }
+    const formData = new FormData();
+    formData.append("source", source);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/start_camera/`, {
+            method: "POST",
+            body: formData
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || "Failed to start camera");
+        }
+        cameraFeed.innerHTML = `
+            <img src="${API_BASE_URL}/camera_feed/" 
+                 alt="Live Camera Feed"
+                 style="width:100%; border-radius:12px; border:2px solid #00d4ff;">
+        `;
+    } catch (err) {
+        alert(err.message);
+    }
+});
+
+stopCamBtn.addEventListener("click", async () => {
+    await fetch(`${API_BASE_URL}/stop_camera/`);
+    cameraFeed.innerHTML = "<p style='color:#ccc;'>Camera stopped.</p>";
+});
+
+</script>
+
 
 
     <!-- Team Section -->
@@ -730,70 +775,8 @@
             }
         }
 
-                // Add Camera functionality
-        const addCamBtn = document.getElementById('addCamBtn');
-        const camIdInput = document.getElementById('camIdInput');
-        const camSourceInput = document.getElementById('camSourceInput');
-        const camerasContainer = document.getElementById('camerasContainer');
 
-        addCamBtn.addEventListener('click', async () => {
-            const camId = camIdInput.value.trim();
-            const source = camSourceInput.value.trim();
-
-            if (!camId || !source) {
-                alert("Please enter both Camera ID and Source.");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append("cam_id", camId);
-            formData.append("source", source);
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/add_camera/`, {
-                    method: "POST",
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                alert(result.message || "Camera added.");
-
-                // === Añadir la cámara dentro del contenedor principal, sin reemplazar ===
-                const camDiv = document.createElement("div");
-                camDiv.style.marginBottom = "2rem";
-                camDiv.style.padding = "1rem";
-                camDiv.style.border = "2px solid #00d4ff";
-                camDiv.style.borderRadius = "12px";
-
-                camDiv.id = `camera-${camId}`;
-                camDiv.innerHTML = `
-                    <h3 style="margin-bottom:1rem; color:#00d4ff; font-family:'JetBrains Mono', monospace;">
-                        Camera: ${camId}
-                    </h3>
-                    <img src="${API_BASE_URL}/camera/${camId}/feed" 
-                        alt="Camera ${camId} Feed"
-                        style="width:100%; border-radius: 12px; margin-bottom:1rem;"
-                        onerror="alert('Failed to load camera feed. Please check the source.')">
-                    <br>
-                    <button class="upload-btn" onclick="removeCamera('${camId}')">Remove Camera</button>
-                `;
-
-                videoContainer.appendChild(camDiv);
-
-
-                // Limpiar inputs
-                camIdInput.value = "";
-                camSourceInput.value = "";
-            } catch (err) {
-                alert(`Failed to add camera: ${err.message}`);
-            }
-        });
-
-                // Remove camera function
+        // Remove camera function
         async function removeCamera(camId) {
             try {
                 const response = await fetch(`${API_BASE_URL}/remove_camera/${camId}`, {
