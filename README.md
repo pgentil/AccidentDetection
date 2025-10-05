@@ -1,3 +1,6 @@
+ https://pabcal.github.io/accidentDetection-webpage/
+
+
 # Accident Detection System
 
 This project includes a FastAPI backend and a simple HTML/JS frontend.
@@ -46,4 +49,5 @@ python -m http.server 8080
 - Ensure the backend is running before opening the frontend.
 - If you use an external AI service (e.g., Roboflow), configure the API key as required by `backend/main.py`.
 - Supported video formats typically include MP4, AVI, and MOV.
+
 
