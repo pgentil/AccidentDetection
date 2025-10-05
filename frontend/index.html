@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SeekRISK - Advanced Accident Detection System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Guardian AI - Advanced Accident Detection System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
 </head>
@@ -12,10 +12,11 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
-            <a href="#" class="logo">SeekRISK</a>
+            <a href="#" class="logo"><img src="logo-placeholder.png" alt="Guardian AI" class="nav-logo"><span>Guardian AI</span></a>
             <ul class="nav-links">
                 <li><a href="#about">About</a></li>
-                <li><a href="#upload">Upload</a></li>
+                <li><a href="#try-it">Try It</a></li>
+                <li><a href="#buy-it">Buy It</a></li>
                 <li><a href="#team">Team</a></li>
             </ul>
         </div>
@@ -24,12 +25,16 @@
     <!-- Hero Section -->
     <section class="hero" id="hero">
         <div class="hero-content">
-            <h1>SeekRISK</h1>
+            <!-- Logo placeholder -->
+            <div class="logo-container">
+                <img src="logo-placeholder.png" alt="Guardian AI Logo" class="main-logo">
+            </div>
+            <h1><span class="title-grey">Guardian</span> AI</h1>
             <div class="subtitle">REAL-TIME ACCIDENT DETECTION</div>
-            <p>Revolutionary AI-powered system that identifies potential accidents before they happen. Using cutting-edge computer vision and machine learning to protect lives through intelligent safety technology.</p>
+            <p>Revolutionary <strong>AI-powered</strong> system that identifies potential <strong>accidents</strong> before they happen. Using cutting-edge <strong>computer vision</strong> and <strong>machine learning</strong> to protect lives through intelligent <strong>safety</strong> technology.</p>
             <div class="hero-buttons">
-                <a href="#upload" class="btn btn-primary">Start Detection</a>
-                <a href="#about" class="btn btn-secondary">Learn More</a>
+                <a href="#try-it" class="btn btn-primary">Try It Out</a>
+                <a href="#buy-it" class="btn btn-secondary">Buy It</a>
             </div>
         </div>
     </section>
@@ -39,7 +44,7 @@
         <div class="container">
             <div class="section-header">
                 <h2>How It Works</h2>
-                <p>Our advanced AI system processes video feeds in real-time using state-of-the-art neural networks to identify potential accidents before they happen.</p>
+                <p>Our advanced <strong>AI</strong> system processes video feeds in <strong>real time</strong> using state-of-the-art <strong>neural networks</strong> to identify potential <strong>accidents</strong> before they happen.</p>
             </div>
             
             <div class="features-grid">
@@ -48,7 +53,7 @@
                         <i class="fas fa-video"></i>
                     </div>
                     <h3>Real-Time Processing</h3>
-                    <p>Advanced computer vision algorithms analyze video frames with millisecond precision and minimal latency for instant safety insights.</p>
+                    <p>Advanced <strong>computer vision</strong> algorithms analyze video frames with millisecond precision and minimal latency for instant <strong>safety</strong> insights.</p>
                 </div>
                 
                 <div class="feature-card">
@@ -56,7 +61,7 @@
                         <i class="fas fa-brain"></i>
                     </div>
                     <h3>AI-Powered Detection</h3>
-                    <p>State-of-the-art deep learning models trained on millions of accident scenarios for unparalleled detection accuracy and reliability.</p>
+                    <p>State-of-the-art <strong>deep learning</strong> models trained on millions of <strong>accident</strong> scenarios for unparalleled <strong>detection</strong> accuracy and reliability.</p>
                 </div>
                 
                 <div class="feature-card">
@@ -64,31 +69,23 @@
                         <i class="fas fa-bolt"></i>
                     </div>
                     <h3>Instant Alerts</h3>
-                    <p>Lightning-fast processing and alerting system that provides immediate feedback on potential safety hazards and accident risks.</p>
+                    <p>Lightning-fast <strong>processing</strong> and <strong>alerting</strong> system that provides immediate feedback on potential <strong>safety</strong> hazards and <strong>accident</strong> risks.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Upload Section -->
-    <section class="upload-section" id="upload">
+    <!-- Try It Section -->
+    <section class="upload-section" id="try-it">
         <div class="container">
             <div class="section-header">
                 <h2>Upload & Analyze</h2>
-                <p>Upload your video and watch our AI system detect accidents in real-time with precise bounding box overlays and safety alerts.</p>
+                <p class="section-lead">Upload a short video and get <strong>real‑time AI</strong> detections with bounding boxes. View the processed live feed instantly.</p>
+                <p class="email-note">We use your email to send an instant alert if an <strong>accident</strong> is detected.</p>
             </div>
             
             <div class="upload-container">
-                <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                    </div>
-                    <div class="upload-text">
-                        <h3>Drop your video here</h3>
-                        <p>or click to browse files</p>
-                    </div>
-                </div>
-                
+                <!-- Inputs and actions first -->
                 <input type="file" id="videoFile" class="file-input" accept="video/*" style="display: none;">
                 <div style="margin: 1.5rem 0;">
                     <input type="email" id="emailInput" class="file-input" placeholder="Enter your email address" style="padding: 1rem; border-radius: 8px; border: 2px solid #00d4ff; width: 300px; font-size: 1.1rem;">
@@ -102,11 +99,106 @@
                     </button>
                 </div>
                 
+                <!-- Upload Status Feedback -->
+                <div class="upload-status" id="uploadStatus" style="display: none;">
+                    <div class="status-content">
+                        <i class="fas fa-check-circle status-icon"></i>
+                        <span class="status-text">Video uploaded ✓ Click Analyze</span>
+                    </div>
+                </div>
+
+                <!-- Drag & drop area second -->
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        <h3>Drop your video here</h3>
+                        <p>or click to browse files</p>
+                    </div>
+                </div>
+
+                <!-- Live video third -->
                 <div class="video-container" id="videoContainer">
                     <div class="status">
                         <h3>Live Accident Detection Feed</h3>
-                        <p>Upload a video to see real-time accident detection with AI-powered bounding boxes and safety alerts</p>
+                        <p>Upload a video to see <strong>real-time</strong> <strong>accident detection</strong> with <strong>AI-powered</strong> bounding boxes and <strong>safety alerts</strong></p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Buy It Section -->
+    <section class="buy-section" id="buy-it">
+        <div class="container">
+            <div class="section-header">
+                <h2>Choose Your Plan</h2>
+                <p>Select the perfect plan for your <strong>safety</strong> needs. All plans include our advanced <strong>AI detection</strong> technology.</p>
+            </div>
+            
+            <div class="pricing-grid">
+                <!-- Monthly Plan -->
+                <div class="pricing-card">
+                    <div class="plan-header">
+                        <h3>Monthly</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">30</span>
+                            <span class="period">/month</span>
+                        </div>
+                    </div>
+                    <ul class="features">
+                        <li><i class="fas fa-check"></i> <strong>Real-time accident detection</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Email notifications</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>24/7 monitoring</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Basic analytics</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Email support</strong></li>
+                    </ul>
+                    <button class="plan-btn">Choose Monthly</button>
+                </div>
+                
+                <!-- Yearly Plan -->
+                <div class="pricing-card featured">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="plan-header">
+                        <h3>Yearly</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">300</span>
+                            <span class="period">/year</span>
+                        </div>
+                        <div class="savings">2 months free</div>
+                    </div>
+                    <ul class="features">
+                        <li><i class="fas fa-check"></i> <strong>Everything in Monthly</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Advanced analytics</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Custom alerts</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>API access</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Priority support</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Data export</strong></li>
+                    </ul>
+                    <button class="plan-btn featured-btn">Choose Yearly</button>
+                </div>
+                
+                <!-- Enterprise Plan -->
+                <div class="pricing-card enterprise">
+                    <div class="enterprise-badge">Enterprise</div>
+                    <div class="plan-header">
+                        <h3>Enterprise</h3>
+                        <div class="price enterprise-price">
+                            <span class="contact-text">Custom Quote</span>
+                        </div>
+                    </div>
+                    <ul class="features">
+                        <li><i class="fas fa-check"></i> <strong>Custom AI model training</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Dedicated infrastructure</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>24/7 dedicated support</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Custom integrations</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>SLA guarantees</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>On‑premise deployment</strong></li>
+                    </ul>
+                    <button class="plan-btn enterprise-btn">Contact Sales</button>
                 </div>
             </div>
         </div>
@@ -117,7 +209,7 @@
         <div class="container">
             <div class="section-header">
                 <h2>Our Team</h2>
-                <p>Visionary engineers and researchers dedicated to advancing safety technology through cutting-edge AI innovation.</p>
+                <p>Visionary engineers and researchers dedicated to advancing <strong>safety technology</strong> through cutting-edge <strong>AI innovation</strong>.</p>
             </div>
             
             <div class="team-grid">
@@ -126,9 +218,12 @@
                     <div class="member-avatar">PC</div>
                     <h3>Pablo Calderon</h3>
                     <p class="member-role">Project Lead & Full-Stack Developer</p>
-                    <p>AI enthusiast with expertise in computer vision and web development. Leading the vision for next-generation safety technology.</p>
+                    <p><strong>AI</strong> enthusiast with expertise in <strong>computer vision</strong> and web development. Leading the vision for next-generation <strong>safety technology</strong>.</p>
                     <div class="social-links">
-                        <a href="#" class="social-link" onclick="openLinkedIn('pablo-calderon')">
+                        <a href="https://www.linkedin.com/in/pablo-calderon-perez/" 
+                            class="social-link" 
+                            target="_blank" 
+                            rel="noopener noreferrer">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
                     </div>
@@ -139,9 +234,12 @@
                     <div class="member-avatar">PG</div>
                     <h3>Pedro Gentil</h3>
                     <p class="member-role">AI Research Engineer</p>
-                    <p>Specializes in deep learning and computer vision algorithms. Pushing the boundaries of what's possible in accident detection.</p>
+                    <p>Specializes in <strong>deep learning</strong> and <strong>computer vision</strong> algorithms. Pushing the boundaries of what's possible in <strong>accident detection</strong>.</p>
                     <div class="social-links">
-                        <a href="#" class="social-link" onclick="openLinkedIn('pedro-gentil')">
+                        <a href="https://www.linkedin.com/in/pedro-santiago-gentil-060057240/" 
+                            class="social-link" 
+                            target="_blank" 
+                            rel="noopener noreferrer">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
                     </div>
@@ -152,9 +250,12 @@
                     <div class="member-avatar">MV</div>
                     <h3>Manuel Ventura</h3>
                     <p class="member-role">Backend Developer</p>
-                    <p>Expert in scalable APIs and real-time data processing. Building the robust foundation that powers our AI system.</p>
+                    <p>Expert in scalable <strong>APIs</strong> and <strong>real-time</strong> data processing. Building the robust foundation that powers our <strong>AI</strong> system.</p>
                     <div class="social-links">
-                        <a href="#" class="social-link" onclick="openLinkedIn('manuel-ventura')">
+                        <a href="https://www.linkedin.com/in/manuel-ventura-etchecahar/" 
+                            class="social-link" 
+                            target="_blank" 
+                            rel="noopener noreferrer">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
                     </div>
@@ -165,9 +266,12 @@
                     <div class="member-avatar">JF</div>
                     <h3>Juan Fernandez</h3>
                     <p class="member-role">Frontend Developer</p>
-                    <p>Creates intuitive user experiences with modern web technologies. Making complex AI systems accessible to everyone.</p>
+                    <p>Creates intuitive <strong>user experiences</strong> with modern web technologies. Making complex <strong>AI</strong> systems accessible to everyone.</p>
                     <div class="social-links">
-                        <a href="#" class="social-link" onclick="openLinkedIn('juan-fernandez')">
+                        <a href="https://www.linkedin.com/in/juan-fernandez-de-navarrete/" 
+                            class="social-link" 
+                            target="_blank" 
+                            rel="noopener noreferrer">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
                     </div>
@@ -178,9 +282,12 @@
                     <div class="member-avatar">AC</div>
                     <h3>Adrian Corrochano</h3>
                     <p class="member-role">Data Scientist</p>
-                    <p>Expert in machine learning with focus on safety-critical systems. Ensuring our AI models are both accurate and reliable.</p>
+                    <p>Expert in <strong>machine learning</strong> with focus on <strong>safety‑critical</strong> systems. Ensuring our <strong>AI</strong> models are both accurate and reliable.</p>
                     <div class="social-links">
-                        <a href="#" class="social-link" onclick="openLinkedIn('adrian-corrochano')">
+                        <a href="https://www.linkedin.com/in/adrian-corrochano/" 
+                            class="social-link" 
+                            target="_blank" 
+                            rel="noopener noreferrer">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
                     </div>

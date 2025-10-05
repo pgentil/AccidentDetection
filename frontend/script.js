@@ -20,6 +20,12 @@ const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('videoFile');
 const uploadBtn = document.getElementById('uploadBtn');
 const videoContainer = document.getElementById('videoContainer');
+const uploadStatus = document.getElementById('uploadStatus');
+
+// Make upload area clickable
+uploadArea.addEventListener('click', () => {
+    fileInput.click();
+});
 
 // File input change
 fileInput.addEventListener('change', (e) => {
@@ -37,6 +43,9 @@ function handleFileSelect(file) {
 
     currentVideoFile = file;
     uploadBtn.style.display = 'inline-block';
+    
+    // Show upload status with checkmark
+    uploadStatus.style.display = 'block';
 }
 
 // Upload button click
@@ -62,6 +71,7 @@ async function uploadVideo() {
     try {
         uploadBtn.textContent = 'Uploading...';
         uploadBtn.disabled = true;
+        uploadStatus.style.display = 'none'; // Hide status during upload
 
         const response = await fetch(`${API_BASE_URL}/upload_video/`, {
             method: 'POST',
@@ -73,7 +83,12 @@ async function uploadVideo() {
         }
 
         const result = await response.json();
-        alert('Video uploaded successfully! Starting analysis...');
+        
+        // Scroll to video container
+        videoContainer.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
         
         // Start the video feed
         setTimeout(() => {
@@ -81,7 +96,7 @@ async function uploadVideo() {
         }, 1000);
 
     } catch (err) {
-        alert(`Upload failed: ${err.message}`);
+        alert('Backend not connected. Please make sure the server is running.');
     } finally {
         uploadBtn.textContent = 'Upload & Analyze';
         uploadBtn.disabled = false;
@@ -96,7 +111,7 @@ function startVideoFeed() {
         <img src="${API_BASE_URL}/video_feed/?t=${timestamp}" 
              alt="Accident Detection Feed"
              style="width: 100%; height: auto; border-radius: 20px;"
-             onerror="alert('Failed to load video feed. Please try uploading again.')">
+             onerror="alert('Backend not connected. Please make sure the server is running.')">
     `;
 }
 
