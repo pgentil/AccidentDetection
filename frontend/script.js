@@ -14,6 +14,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
 // File upload functionality
 const API_BASE_URL = 'https://accidentdetection-lx68.onrender.com';
+//const API_BASE_URL = 'http://localhost:8000';
 let currentVideoFile = null;
 
 const uploadArea = document.getElementById('uploadArea');
